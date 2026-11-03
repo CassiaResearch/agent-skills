@@ -1,7 +1,13 @@
-# grill-with-ui
+# grill-artifact
+
+Adapted from [grill-with-ui](https://github.com/jasonku09/grill-with-ui) by Jason Ku (MIT;
+his licence is kept in [`LICENSE`](LICENSE)). Two changes from upstream: the page is
+**published as a claude.ai Artifact by default** (a local browser page is the fallback), and
+**every question is drawn when it is asked**, not only on Explore deeper. Everything else is
+upstream's, and the rest of this README describes it.
 
 A skill for coding agents that moves a "grilling" design interview out of the terminal and
-onto a local browser page. The agent asks its questions as cards, each with lettered options
+onto a drawn page. The agent asks its questions as cards, each with lettered options
 and a highlighted recommendation. You answer them in any order, defer or reopen them, discuss
 any single one in its own thread without losing the rest of the session, and press one
 button, **Send to Agent**, to ship everything you staged as a single turn. At the end the
@@ -31,24 +37,31 @@ Submissions made while the agent is not listening remain queued for resume.
 ## Install
 
 The skill is a plain [Agent Skills](https://agentskills.io) folder (`SKILL.md` plus one
-script and one page), so it installs the same way everywhere: put this folder where your
-agent looks for skills, under the name `grill-with-ui`. A symlink keeps `git pull` as the
-update path; copying the folder works too. Node 20 or newer is the only requirement.
+script and one page). Node 20 or newer is the only requirement. Install it with the
+[skills CLI](https://github.com/vercel-labs/skills):
 
 ```sh
-git clone https://github.com/jasonku09/grill-with-ui ~/Projects/grill-with-ui
-ln -s ~/Projects/grill-with-ui ~/.claude/skills/grill-with-ui   # Claude Code (Cursor reads it too)
-ln -s ~/Projects/grill-with-ui ~/.agents/skills/grill-with-ui   # Codex, Gemini CLI, Cursor, Copilot
+npx skills add CassiaResearch/agent-skills --skill grill-artifact
+```
+
+Add `--agent claude-code` (or another agent) to install for one agent only. To install by
+hand instead, put this folder where your agent looks for skills, under the name
+`grill-artifact`; a symlink keeps `git pull` as the update path:
+
+```sh
+git clone https://github.com/CassiaResearch/agent-skills ~/Projects/agent-skills
+ln -s ~/Projects/agent-skills/skills/grill-artifact ~/.claude/skills/grill-artifact   # Claude Code (Cursor reads it too)
+ln -s ~/Projects/agent-skills/skills/grill-artifact ~/.agents/skills/grill-artifact   # Codex, Gemini CLI, Cursor, Copilot
 ```
 
 Where each agent looks, and how to start a grill once it is there:
 
 | Agent | User-level folder | Project-level folder | Start a grill |
 |---|---|---|---|
-| Claude Code | `~/.claude/skills/` | `.claude/skills/` | `/grill-with-ui <topic>` |
-| Codex (CLI, IDE) | `~/.agents/skills/` | `.agents/skills/` | `$grill-with-ui <topic>` |
+| Claude Code | `~/.claude/skills/` | `.claude/skills/` | `/grill-artifact <topic>` |
+| Codex (CLI, IDE) | `~/.agents/skills/` | `.agents/skills/` | `$grill-artifact <topic>` |
 | Gemini CLI | `~/.gemini/skills/` or `~/.agents/skills/` | `.gemini/skills/` or `.agents/skills/` | say "grill with ui: <topic>"; accept the activation prompt |
-| Cursor | `~/.cursor/skills/` or `~/.agents/skills/` (also `~/.claude/skills/`) | `.cursor/skills/` or `.agents/skills/` | `/grill-with-ui <topic>` in Agent chat |
+| Cursor | `~/.cursor/skills/` or `~/.agents/skills/` (also `~/.claude/skills/`) | `.cursor/skills/` or `.agents/skills/` | `/grill-artifact <topic>` in Agent chat |
 | GitHub Copilot (CLI, VS Code, JetBrains) | `~/.copilot/skills/` or `~/.agents/skills/` | `.github/skills/`, `.claude/skills/`, or `.agents/skills/` | say "grill with ui: <topic>" |
 | Any other agent that reads `SKILL.md` | its skills folder | | say "grill with ui: <topic>" |
 
@@ -74,7 +87,7 @@ What the agent needs at run time:
 In any project:
 
 ```
-/grill-with-ui <topic you want grilled>
+/grill-artifact <topic you want grilled>
 ```
 
 The agent prints a URL. Open it. Answer by clicking an option (the recommended one is
@@ -123,7 +136,7 @@ staged; the agent writes the design doc to the path shown in the header (default
 To pick up an unfinished grill, in the same project:
 
 ```
-/grill-with-ui resume
+/grill-artifact resume
 ```
 
 If the agent crashed or was closed, sends you made in the meantime are replayed on resume,

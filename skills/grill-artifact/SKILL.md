@@ -1,9 +1,9 @@
 ---
 name: grill-artifact
-description: Run a grilling interview on a drawn page instead of the terminal, published as an Artifact by default (a local browser page only when there is a reason). Every question is laid out with its recommendation and always with a picture (a Now-vs-Suggested replica of the real screen for a frontend question, a Mermaid or other diagram for a backend one), answerable in any order, with a per-question discussion thread and one "Send to Agent" button. Use when the user says "grill with ui", invokes /grill-with-ui with a topic, or says "/grill-with-ui resume".
+description: Run a grilling interview on a drawn page instead of the terminal, published as an Artifact by default (a local browser page only when there is a reason). Every question is laid out with its recommendation and always with a picture (a Now-vs-Suggested replica of the real screen for a frontend question, a Mermaid or other diagram for a backend one), answerable in any order, with a per-question discussion thread and one "Send to Agent" button. Use when the user says "grill with ui", invokes /grill-artifact (or /grill-with-ui) with a topic, or says "/grill-artifact resume".
 ---
 
-# grill-with-ui
+# grill-artifact
 
 Based on [grill-with-ui](https://github.com/jasonku09/grill-with-ui) (MIT, Jason Ku). Two
 changes from upstream: the page is **published as a claude.ai Artifact by default**, and
@@ -147,7 +147,7 @@ node $SKILL/server.mjs patch --session <session> <<'GRILL_PATCH'
 GRILL_PATCH
 ```
 
-## Start (`/grill-with-ui <topic>`, `$grill-with-ui <topic>`, or "grill with ui: <topic>")
+## Start (`/grill-artifact <topic>`, `$grill-artifact <topic>`, or "grill with ui: <topic>")
 
 1. From the project directory run
    `node $SKILL/server.mjs new --topic "<topic>" --intent "<why this grill exists, 1-2 sentences>" --doc "<doc path>"`.
@@ -169,7 +169,7 @@ GRILL_PATCH
 5. Print ONE line: the URL, how many questions wait, and the doc path (say the user can change
    the path by typing in the terminal). Return to listening.
 
-## Resume (`/grill-with-ui resume`)
+## Resume (`/grill-artifact resume`)
 
 1. From the project directory run `node $SKILL/server.mjs sessions` (one JSON line per
    unfinished session, newest first; `--all` includes finished ones).
