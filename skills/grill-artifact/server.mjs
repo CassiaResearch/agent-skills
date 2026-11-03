@@ -149,12 +149,12 @@ function cmdServe(o) {
   const send = (res, code, body, type) => { res.writeHead(code, { "content-type": type, "cache-control": "no-store" }); res.end(body); };
   const json = (res, code, obj) => send(res, code, JSON.stringify(obj), "application/json");
   // A send is a handful of staged actions; 1 MB is far above any real one and keeps a runaway
-  // client from filling memory. Past it the body reads as "", which fails the JSON parse (400).
+  // client from filling memory. Past it the body reads as null, answered 413.
   const MAX_BODY = 1024 * 1024;
   const readBody = (req) => new Promise((resolve) => {
     let b = ""; let over = false;
     req.on("data", (c) => { if (over) return; b += c; if (b.length > MAX_BODY) { over = true; b = ""; } });
-    req.on("end", () => resolve(over ? "" : b));
+    req.on("end", () => resolve(over ? null : b));
   });
 
   const srv = http.createServer(async (req, res) => {
@@ -199,7 +199,9 @@ function cmdServe(o) {
       const origin = req.headers.origin;
       if (origin !== undefined && !selfOrigins.includes(origin)) return json(res, 403, { error: "cross-origin request rejected" });
       let parsed;
-      try { parsed = JSON.parse(await readBody(req)); } catch { return json(res, 400, { error: "body must be JSON" }); }
+      const body = await readBody(req);
+      if (body === null) return json(res, 413, { error: "body too large" });
+      try { parsed = JSON.parse(body); } catch { return json(res, 400, { error: "body must be JSON" }); }
       if (!parsed || !Array.isArray(parsed.actions) || parsed.actions.length === 0) return json(res, 400, { error: "actions must be a non-empty array" });
       const line = JSON.stringify({ type: "send", seq: ++seq, at: new Date().toISOString(), session, actions: parsed.actions });
       fs.appendFileSync(events, line + "\n");

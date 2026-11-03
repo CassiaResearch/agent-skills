@@ -115,6 +115,7 @@ test("serve: /send rejects a mismatched Origin, allows same-origin and no-Origin
   assert.equal((await withOrigin("https://evil.example", "text/plain")).status, 403, "a foreign origin is rejected even as a no-preflight content-type");
   assert.equal((await withOrigin("null")).status, 403, "the sandboxed visual iframe's opaque origin is rejected too");
 
+  assert.equal((await post(s.ready.url, { actions: [{ q: "q1", type: "thread", text: "x".repeat(1024 * 1024 + 1) }] })).status, 413, "a body over 1 MB is refused as too large");
   assert.equal(readFileSync(join(session, "events.jsonl"), "utf8").trim().split("\n").length, 3, "only the three accepted sends landed");
 });
 

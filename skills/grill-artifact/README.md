@@ -121,10 +121,10 @@ always complete without them. The rule: a question about a screen, a layout, or 
 click through gets a **mockup per option**, a replica of the real screen with that option
 applied; one about architecture, data flow, a sequence, or states gets a **diagram**; one about
 policy, naming, or wording shows where it lands, the label in place or a small before/after
-table. A figure never holds up the interview: the figure area reads "Drawing the figure…" and
-a subagent (rules in
-`figure-brief.md`) fills it in a moment later. Each figure sits in a sandboxed frame that
-follows your system theme and fits a phone width; **Open larger** shows it full size.
+table. A figure never holds up the interview: the figure area reads "Drawing the figure…"
+and a subagent (rules in `figure-brief.md`) fills it in a moment later. Each figure sits in a
+sandboxed frame that follows your system theme and fits a phone width; **Open larger** shows
+it full size.
 
 **Finish grill** sends at once (after an inline confirm), together with anything you had
 staged; the agent writes the design doc to the path shown in the header (default
@@ -159,6 +159,15 @@ In this repo: `server.mjs` (the server and CLI), `page.html` (the page), `SKILL.
 prompt the agent follows), `visual-brief.md` and `figure-brief.md` (the subagents' rules), `test/`, and `design/` + `docs/design.md` (how it was designed).
 `design/record-demo.mjs` re-records the GIF above by driving the real page; it needs
 Playwright and `ffmpeg`.
+
+## Known limitations
+
+- **One tab per Artifact grill.** In the Artifact, a Send numbers itself from the highest send
+  it can see and writes `sends/<n>`. Two tabs of the same grill pressing Send in the same moment
+  can take the same number, and the later write replaces the earlier send. The local page is not
+  affected: its server numbers every send.
+- **The local page answers only `127.0.0.1` and `localhost`.** Opened through a port forward
+  or a remote-dev proxy under another host name, it returns 403.
 
 ## Server commands
 
