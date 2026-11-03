@@ -34,13 +34,15 @@ four steps replace `serve`, `url` and the Monitor:
    four replacements around `figSrc`, `figureBody`, `fig-dialog-frame` and the visual frame.
 2. **Push state after every `patch`.** The page reads state from the artifact's `db` doc
    `grill/state`: after each `patch`, `ArtifactData set` collection `grill`, doc `state`,
-   `file_path: <session>/state.json`, with `if_version` from the previous set. Text changes
+   `file_path: <session>/state.json`, with `if_version` from the previous set. If the tool
+   refuses a path under `~/.grill-with-ui`, copy `state.json` into the scratchpad and set from there. Text changes
    need only this; no republish.
 3. **A Send wakes me.** The page writes `sends/<seq>` to `db` and posts a comment sent to Claude,
    which notifies this session (it watches artifacts it publishes; confirm the publish result
    says the subscription is connected). That notification is user input, exactly as "The event
    rule" says for a monitor line.
-4. **On a wake:** `ArtifactData list` collection `sends` with `out_dir`, then
+4. **On a wake:** `ArtifactData list` collection `sends` with `out_dir`, paging with
+   `next_cursor` until none is left (a page holds at most 100, and sends are never deleted), then
    `node $SKILL/artifact.mjs ingest --session <session> --sends <out_dir>` (the folder it wrote), then
    `node $SKILL/server.mjs pending --session <session>` and handle every printed send as Resume
    step 3 says. One patch, one state push.
