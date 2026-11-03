@@ -1,10 +1,6 @@
 # grill-artifact
 
-Adapted from [grill-with-ui](https://github.com/jasonku09/grill-with-ui) by Jason Ku (MIT;
-his licence is kept in [`LICENSE`](LICENSE)). Two changes from upstream: the page is
-**published as a claude.ai Artifact by default** (a local browser page is the fallback), and
-**every question is drawn when it is asked**, not only on Explore deeper. Everything else is
-upstream's, and the rest of this README describes it.
+Adapted from [grill-with-ui](https://github.com/jasonku09/grill-with-ui) by Jason Ku (MIT), published as a claude.ai Artifact with a figure on every question.
 
 A skill for coding agents that moves a "grilling" design interview out of the terminal and
 onto a drawn page. The agent asks its questions as cards, each with lettered options
