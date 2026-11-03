@@ -22,6 +22,7 @@ Works with Claude Code, Cursor, Codex, Goose, OpenCode, and other agents support
 |---|---|
 | [`skill-genius`](skills/skill-genius/) | End-to-end skill authoring: create, update, fix, refactor, rename, split, retire skills against Anthropic best-practices |
 | [`agents-md-management`](skills/agents-md-management/) | Full lifecycle of AGENTS.md files — create from project-type templates, audit against an 8-point quality rubric, revise with session learnings. AGENTS.md is canonical; CLAUDE.md gets a one-line `@AGENTS.md` pointer |
+| [`grill-artifact`](skills/grill-artifact/) | A grilling design interview on a drawn page instead of the terminal: published as a claude.ai Artifact by default (local browser page as fallback), every question with a recommendation and a Now-vs-option figure, answerable in any order. Based on [grill-with-ui](https://github.com/jasonku09/grill-with-ui) (MIT, Jason Ku) |
 
 ## Repo layout
 
