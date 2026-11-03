@@ -10,6 +10,8 @@ changes from upstream: the page is **published as a claude.ai Artifact by defaul
 **every question is drawn when it is asked**, not only on Explore deeper (see Figures).
 Everything else is upstream's.
 
+`$SKILL` means this skill's base directory (the folder holding this file).
+
 ## Where the grill is shown: an Artifact, unless there is a reason not to
 
 **Default: the same grill page, published as an Artifact.** It is

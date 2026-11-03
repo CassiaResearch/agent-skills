@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { closeSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { createConnection, createServer } from "node:net";
+import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -117,6 +118,22 @@ test("serve: /send rejects a mismatched Origin, allows same-origin and no-Origin
   assert.equal(readFileSync(join(session, "events.jsonl"), "utf8").trim().split("\n").length, 3, "only the three accepted sends landed");
 });
 
+test("serve: rejects a request whose Host is not this server, so a DNS-rebinding page reads nothing", async (t) => {
+  const { session } = newSession(tmp("grill-h-"));
+  const s = await startServe(session); t.after(s.stop);
+  const port = Number(new URL(s.ready.url).port);
+  const status = (path, host) => new Promise((res, rej) => {
+    const r = request({ host: "127.0.0.1", port, path, headers: { host } }, (resp) => { resp.resume(); res(resp.statusCode); });
+    r.on("error", rej); r.end();
+  });
+  for (const path of ["/", "/state", "/events", "/visual", "/figure/q1-A.html"]) {
+    assert.equal(await status(path, `evil.example:${port}`), 403, `${path} refuses a foreign Host`);
+  }
+  assert.equal(await status("/state", `127.0.0.1:${port}`), 200, "127.0.0.1 is this server");
+  assert.equal(await status("/state", `localhost:${port}`), 200, "localhost is this server");
+  assert.equal(await status("/state", `localhost:${port + 1}`), 403, "another port is not");
+});
+
 test("wait: blocks for a seq newer than --after (default: current last), prints it, exits 0; exit 3 on timeout", async (t) => {
   const { session } = newSession(tmp("grill-w-"));
   const s = await startServe(session); t.after(s.stop);
@@ -168,6 +185,7 @@ test("serve: /visual serves the session's visual.html (no-store), 404 JSON when 
   assert.equal(hit.status, 200);
   assert.match(hit.headers.get("content-type"), /^text\/html/);
   assert.equal(hit.headers.get("cache-control"), "no-store");
+  assert.equal(hit.headers.get("content-security-policy"), "sandbox allow-scripts", "opened on its own, the visual is as sandboxed as its iframe");
   assert.equal(await hit.text(), html);
 });
 
@@ -756,7 +774,7 @@ test("serve: /figure/<name> serves a file from the session's figures folder, san
     assert.equal(r.status, 404, `${bad} must be 404`);
   }
   const raw = await new Promise((res) => { // a client that does not normalise the path
-    const c = createConnection(Number(new URL(s.ready.url).port), "127.0.0.1", () => c.write("GET /figure/../secret.html HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n"));
+    const c = createConnection(Number(new URL(s.ready.url).port), "127.0.0.1", () => c.write(`GET /figure/../secret.html HTTP/1.1\r\nHost: ${new URL(s.ready.url).host}\r\nConnection: close\r\n\r\n`));
     let b = ""; c.on("data", (d) => { b += d; }); c.on("end", () => res(b));
   });
   assert.match(raw, /^HTTP\/1\.1 404/);

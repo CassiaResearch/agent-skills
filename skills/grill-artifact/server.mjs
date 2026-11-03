@@ -144,12 +144,24 @@ function cmdServe(o) {
   let seq = lastSeq(events);
   let lastGoodState = null;
   let selfOrigins = [];
+  let selfHosts = [];
 
   const send = (res, code, body, type) => { res.writeHead(code, { "content-type": type, "cache-control": "no-store" }); res.end(body); };
   const json = (res, code, obj) => send(res, code, JSON.stringify(obj), "application/json");
-  const readBody = (req) => new Promise((resolve) => { let b = ""; req.on("data", (c) => { b += c; }); req.on("end", () => resolve(b)); });
+  // A send is a handful of staged actions; 1 MB is far above any real one and keeps a runaway
+  // client from filling memory. Past it the body reads as "", which fails the JSON parse (400).
+  const MAX_BODY = 1024 * 1024;
+  const readBody = (req) => new Promise((resolve) => {
+    let b = ""; let over = false;
+    req.on("data", (c) => { if (over) return; b += c; if (b.length > MAX_BODY) { over = true; b = ""; } });
+    req.on("end", () => resolve(over ? "" : b));
+  });
 
   const srv = http.createServer(async (req, res) => {
+    // **Every route answers only to this server's own Host** (127.0.0.1 or localhost, this port).
+    // Binding to 127.0.0.1 is not enough: a DNS-rebinding page points its own name at 127.0.0.1
+    // and could then read the whole grill from /state. Origin alone guards only /send.
+    if (!selfHosts.includes(req.headers.host)) return json(res, 403, { error: "unknown host" });
     const { pathname } = new URL(req.url, "http://x");
     if (req.method === "GET" && pathname === "/") return send(res, 200, fs.readFileSync(page), "text/html; charset=utf-8");
     if (req.method === "GET" && pathname === "/state") {
@@ -163,7 +175,10 @@ function cmdServe(o) {
     if (req.method === "GET" && pathname === "/visual") {
       const visual = path.join(session, "visual.html"); // written only by the agent; shown by the page in a sandboxed iframe
       if (!fs.existsSync(visual)) return json(res, 404, { error: "no visual" });
-      return send(res, 200, fs.readFileSync(visual), "text/html; charset=utf-8");
+      // Same CSP sandbox as a figure: the visual opened in its own tab stays as powerless as the
+      // page's sandboxed iframe, with no same-origin access to /send.
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": "sandbox allow-scripts", "x-content-type-options": "nosniff" });
+      return res.end(fs.readFileSync(visual));
     }
     if (req.method === "GET" && pathname.startsWith("/figure/")) {
       // Figures are drawn by a subagent into <session>/figures/ and shown by the page in sandboxed
@@ -205,6 +220,7 @@ function cmdServe(o) {
     const { port } = srv.address();
     const url = `http://127.0.0.1:${port}/`;
     selfOrigins = [`http://127.0.0.1:${port}`, `http://localhost:${port}`];
+    selfHosts = [`127.0.0.1:${port}`, `localhost:${port}`];
     writeJson(serverFile, { url, port, pid: process.pid, started: new Date().toISOString() });
     print({ type: "ready", url, session });
   });
@@ -223,6 +239,7 @@ function cmdWait(o) {
   // that lands while this process is still booting is therefore waited past rather than
   // returned, which is why wait mode passes --after <agent.handled> explicitly.
   const after = o.after !== undefined && o.after !== true ? Number(o.after) : lastSeq(events);
+  if (!Number.isInteger(after) || after < 0) die("--after must be a whole number (a send seq)");
   const deadline = Date.now() + Number(o.timeout !== undefined && o.timeout !== true ? o.timeout : 480) * 1000;
   const tick = () => {
     for (const { line, ev } of readEvents(events)) {
