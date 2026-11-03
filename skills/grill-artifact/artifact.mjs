@@ -9,8 +9,8 @@
 //
 //   build   --session DIR --out DIR     write DIR/index.html (page.html transformed for an Artifact),
 //                                       copy DIR/figures/* and DIR/visual.html beside it
-//   ingest  --session DIR --sends FILE  append sends read back from the artifact db (a JSON array of
-//                                       bare docs or {id, data} wrappers) to DIR/events.jsonl in
+//   ingest  --session DIR --sends PATH  append sends read back from the artifact db (ArtifactData's out_dir
+//                                       folder, or a file of docs or {id, data} wrappers) to DIR/events.jsonl in
 //                                       server.mjs's format; then `server.mjs pending` works unchanged
 //
 // page.html is read, never written. Every transformation is an exact, counted replacement, so an
@@ -201,14 +201,30 @@ function cmdBuild(o) {
 }
 
 // ---- ingest ----
+// **`--sends` takes what `ArtifactData list` writes with `out_dir`: a folder of one file per
+// document (`<out_dir>/sends/<id>.json`)**, either that folder or its parent. A single file holding
+// a JSON array of documents, or one document, works too. A document without its own id is named
+// by its file, so `sends/4.json` is send 4 even when the document carries no `seq`.
+function readSends(target) {
+  const parse = (file) => {
+    try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch (e) { die(`cannot read the sends file ${file}: ${oneLine(e.message)}`); }
+  };
+  const named = (file, doc) => (doc && typeof doc === "object" && !Array.isArray(doc) && doc.id === undefined ? { id: path.basename(file, ".json"), data: doc } : doc);
+  let stat;
+  try { stat = fs.statSync(target); } catch { die(`no such sends file or folder: ${target}`); }
+  if (stat.isFile()) { const v = parse(target); return Array.isArray(v) ? v : [named(target, v)]; }
+  const dir = fs.existsSync(path.join(target, "sends")) && fs.statSync(path.join(target, "sends")).isDirectory() ? path.join(target, "sends") : target;
+  return fs.readdirSync(dir).filter((f) => f.endsWith(".json")).flatMap((f) => {
+    const file = path.join(dir, f); const v = parse(file);
+    return Array.isArray(v) ? v : [named(file, v)];
+  });
+}
 // Each send doc becomes one events.jsonl line in server.mjs's exact shape. Only seqs past the highest
 // one already on disk are appended, so running ingest twice on the same read-back appends nothing.
 function cmdIngest(o) {
   const session = mustSession(o);
-  if (!o.sends || o.sends === true) die("--sends <json file> is required");
-  let docs;
-  try { docs = JSON.parse(fs.readFileSync(path.resolve(o.sends), "utf8")); } catch (e) { die(`cannot read the sends file: ${oneLine(e.message)}`); }
-  if (!Array.isArray(docs)) die("the sends file must be a JSON array of send docs");
+  if (!o.sends || o.sends === true) die("--sends <file or folder> is required");
+  const docs = readSends(path.resolve(o.sends));
   const events = path.join(session, "events.jsonl");
   const have = lastSeq(events);
   const bySeq = new Map();
@@ -234,4 +250,4 @@ const o = parseArgs(process.argv.slice(2));
 const cmds = { build: cmdBuild, ingest: cmdIngest };
 // own keys only: `toString` and friends are inherited, not subcommands
 (Object.hasOwn(cmds, o._[0] ?? "") ? cmds[o._[0]]
-  : () => die("usage: artifact.mjs build --session DIR --out DIR | ingest --session DIR --sends FILE"))(o);
+  : () => die("usage: artifact.mjs build --session DIR --out DIR | ingest --session DIR --sends FILE|DIR"))(o);

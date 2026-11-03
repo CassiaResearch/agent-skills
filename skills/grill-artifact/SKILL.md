@@ -20,9 +20,10 @@ Visualize, Finish grill), with its transport swapped by `artifact.mjs`. Everythi
 about `state.json`, `patch`, rounds, figures, sends and Finish applies as written; only these
 four steps replace `serve`, `url` and the Monitor:
 
-1. **Build and publish.** `node $SKILL/artifact.mjs build --session <session> --out <session>/artifact`,
-   then publish `<session>/artifact/index.html` with the Artifact tool, `capabilities:
-   { db: {}, user: {}, comments: {} }`, `root: <session>/artifact`, and every file under
+1. **Build and publish.** `node $SKILL/artifact.mjs build --session <session> --out <scratchpad>/grill-<id>`,
+   where `<scratchpad>` is your session scratchpad and `<id>` the session's `id`, then publish
+   `<scratchpad>/grill-<id>/index.html` with the Artifact tool, `capabilities:
+   { db: {}, user: {}, comments: {} }`, `root: <scratchpad>/grill-<id>`, and every file under
    `figures/` (and `visual.html`) in `files`. Keep the URL in the session (`patch` `"artifact":
    "<url>"`). Republish to the same URL whenever a figure or the visual lands.
    **Build into the session scratchpad, not `~/.grill-with-ui`**: the Artifact tool publishes
@@ -40,7 +41,7 @@ four steps replace `serve`, `url` and the Monitor:
    says the subscription is connected). That notification is user input, exactly as "The event
    rule" says for a monitor line.
 4. **On a wake:** `ArtifactData list` collection `sends` with `out_dir`, then
-   `node $SKILL/artifact.mjs ingest --session <session> --sends <that file>`, then
+   `node $SKILL/artifact.mjs ingest --session <session> --sends <out_dir>` (the folder it wrote), then
    `node $SKILL/server.mjs pending --session <session>` and handle every printed send as Resume
    step 3 says. One patch, one state push.
 

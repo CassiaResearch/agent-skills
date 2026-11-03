@@ -106,7 +106,7 @@ about, not the whole app.
 ## Diagram (kind = diagram)
 
 **Default to Mermaid**, embedded from
-`https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js` with
+`https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js` with
 `mermaid.initialize({ startOnLoad: true, theme: "neutral" })`, and note in the file's comment
 that it needs network. A flowchart is always `flowchart TD`, never `LR`: if it only works left to
 right it is too wide, so cut nodes. Use `sequenceDiagram` when the question is about order and

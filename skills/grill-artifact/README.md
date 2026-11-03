@@ -180,7 +180,7 @@ node server.mjs wait     --session DIR [--after N] [--timeout S]  block until th
 node server.mjs url      --session DIR [--timeout S]           print the running server's url
 node server.mjs patch    --session DIR [--file P]              apply a JSON patch (stdin or P) to state.json
 node artifact.mjs build  --session DIR --out DIR               build the page as a claude.ai Artifact (the default)
-node artifact.mjs ingest --session DIR --sends FILE            append sends read back from the Artifact's database
+node artifact.mjs ingest --session DIR --sends PATH            append sends read back from the Artifact's database (a file or ArtifactData's out_dir)
 ```
 
 `patch` merges by the rules in `SKILL.md` ("Patching state.json"). A bad patch exits
@@ -192,7 +192,7 @@ state.
 ## Tests
 
 ```sh
-node --test test/server.test.mjs
+node --test test/server.test.mjs test/artifact.test.mjs
 PLAYWRIGHT_PKG=/path/to/node_modules/@playwright/test/index.mjs node test/page.e2e.mjs
 ```
 
